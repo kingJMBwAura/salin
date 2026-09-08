@@ -1,0 +1,188 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-ink text-text font-sans antialiased;
+    /* The inside of a machine: a faint circuit grid, and one cyan bloom
+       overhead standing in for the light the whole app is lit by. */
+    background-image:
+      radial-gradient(100% 55% at 50% -12%, rgba(53, 231, 255, 0.09) 0%, transparent 60%),
+      repeating-linear-gradient(
+        to right,
+        rgba(53, 231, 255, 0.035) 0 1px,
+        transparent 1px 48px
+      ),
+      repeating-linear-gradient(
+        to bottom,
+        rgba(53, 231, 255, 0.035) 0 1px,
+        transparent 1px 48px
+      );
+    background-attachment: fixed;
+  }
+
+  ::selection {
+    @apply bg-neondim text-text;
+  }
+
+  /* Keyboard focus stays visible everywhere; pointer clicks stay quiet. */
+  :focus-visible {
+    @apply outline-none ring-2 ring-neon/70 ring-offset-2 ring-offset-ink rounded-sm;
+  }
+
+  ::-webkit-scrollbar {
+    width: 11px;
+    height: 11px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-line2 rounded-full border-[3px] border-solid border-transparent bg-clip-content;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-faint bg-clip-content;
+  }
+}
+
+@layer components {
+  .card {
+    @apply bg-surface/90 border border-line rounded-lg;
+  }
+
+  .field {
+    @apply w-full bg-raised border border-line rounded-md px-3 py-2 text-sm text-text
+           placeholder:text-faint transition-colors;
+  }
+  .field:hover {
+    @apply border-line2;
+  }
+  .field:focus {
+    @apply outline-none border-neon/60 ring-1 ring-neon/30;
+  }
+
+  .btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-md px-3.5 py-2
+           text-sm font-medium transition-colors select-none
+           disabled:opacity-40 disabled:cursor-not-allowed;
+  }
+  .btn-primary {
+    @apply btn bg-neon text-ink hover:bg-neon/90 active:bg-neon/80;
+  }
+  .btn-ghost {
+    @apply btn border border-line text-text hover:bg-raised hover:border-line2;
+  }
+  .btn-quiet {
+    @apply btn text-muted hover:text-text hover:bg-raised;
+  }
+  .btn-danger {
+    @apply btn border border-line text-muted hover:text-flare hover:border-flare/40
+           hover:bg-flare/10;
+  }
+
+  .eyebrow {
+    @apply font-mono text-[10.5px] uppercase tracking-[0.16em] text-faint;
+  }
+
+  /* Headings are set in the display face, uppercase and widely tracked — the
+     only place the app raises its voice. */
+  .title {
+    @apply font-display uppercase tracking-[0.06em] text-text;
+  }
+}
+
+/* --- Signature: the pipeline trace ---------------------------------------
+   Every job draws its own conversion as a circuit run:
+
+       [MKV] ──●── H.264 · copy ──●── [MP4]
+
+   A leg that copies lights mint and stays still, because copying costs
+   nothing. A leg that re-encodes lights cyan and, while it is actually
+   running, carries a highlight travelling along it. The distinction the whole
+   app turns on is therefore visible before you read a word. */
+.trace-leg {
+  position: relative;
+  height: 1px;
+  flex: 1 1 auto;
+  min-width: 18px;
+  background: theme("colors.line");
+  overflow: hidden;
+}
+.trace-leg[data-action="copy"] {
+  background: rgba(79, 227, 176, 0.45);
+}
+.trace-leg[data-action="encode"] {
+  background: rgba(53, 231, 255, 0.35);
+}
+.trace-leg[data-live="true"]::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 40%;
+  background: linear-gradient(90deg, transparent, theme("colors.neon"), transparent);
+  animation: trace-run 1.4s linear infinite;
+}
+
+@keyframes trace-run {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(250%);
+  }
+}
+
+.trace-node {
+  width: 7px;
+  height: 7px;
+  flex: none;
+  border-radius: 9999px;
+  background: theme("colors.line2");
+  transition: background-color 160ms ease, box-shadow 160ms ease;
+}
+.trace-node[data-action="copy"] {
+  background: theme("colors.mint");
+  box-shadow: 0 0 0 3px rgba(79, 227, 176, 0.14);
+}
+.trace-node[data-action="encode"] {
+  background: theme("colors.neon");
+  box-shadow: 0 0 0 3px rgba(53, 231, 255, 0.16);
+}
+
+/* The indeterminate progress bar, for the moments before ffmpeg's first tick. */
+@keyframes shimmer {
+  from {
+    transform: translateX(-100%);
+  }
+  to {
+    transform: translateX(300%);
+  }
+}
+.shimmer::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  width: 33%;
+  background: linear-gradient(90deg, transparent, rgba(53, 231, 255, 0.55), transparent);
+  animation: shimmer 1.5s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  .shimmer::after,
+  .trace-leg[data-live="true"]::after {
+    width: 100%;
+    opacity: 0.3;
+  }
+}

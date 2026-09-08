@@ -1,0 +1,56 @@
+appId: com.jmb.salin
+productName: Salin
+
+directories:
+  output: release
+  buildResources: build
+
+files:
+  - out/**/*
+  - package.json
+
+# Nothing native here — ffmpeg is an external binary on PATH, not a bundled
+# addon — so there is no asarUnpack list and nothing to rebuild.
+npmRebuild: false
+
+mac:
+  icon: build/icon.png
+  target:
+    # `dir` is the .app you run locally; `zip` is the file you hand to someone
+    # else. Building both means the shareable artifact always exists and can
+    # never be a stale hand-rolled copy of an older build.
+    - target: dir
+      arch: arm64
+    - target: zip
+      arch: arm64
+  category: public.app-category.video
+  # Ad-hoc signed ("-"), not skipped.
+  #
+  # There is no paid Apple Developer account, so this can never be notarised and
+  # Gatekeeper will always stop the first open on someone else's Mac. But *how*
+  # it stops matters. With signing skipped entirely, the bundle keeps the stale
+  # linker signature Electron shipped with — wrong identifier, unsealed
+  # resources — and a downloaded copy fails verification outright: macOS says the
+  # app "is damaged and can't be opened", with no way past it.
+  #
+  # An ad-hoc signature is still not a trusted one, but it is *valid*, so the
+  # refusal becomes the ordinary unidentified-developer prompt with an Open
+  # Anyway path. This is invisible locally: a build copied by hand carries no
+  # quarantine flag, so Gatekeeper never assesses it.
+  identity: "-"
+  entitlements: build/entitlements.mac.plist
+  entitlementsInherit: build/entitlements.mac.plist
+
+# Cross-built from macOS and never run on Windows here.
+#
+# `zip` rather than `nsis`: a portable zip needs no installer toolchain, and
+# NSIS packaging can want Wine, which is not installed. x64 rather than arm64
+# because Windows on ARM runs x64 under emulation, so one build covers both.
+#
+# Unsigned, because there is no Windows code-signing certificate — SmartScreen
+# will warn on first run and nothing in this config can change that.
+win:
+  icon: build/icon.png
+  target:
+    - target: zip
+      arch: x64
